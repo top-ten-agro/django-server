@@ -61,3 +61,19 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         Return the short name of the user.
         """
         return self.first_name
+
+    class Meta:
+        verbose_name = "User"
+        verbose_name_plural = "Users"
+
+
+class Employee(models.Model):
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, primary_key=True)
+    name = models.CharField(max_length=200)
+    designation = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return self.name

@@ -1,7 +1,7 @@
 from django.db import models
 from store.models import Store
 from product.models import Product
-from employee.models import Employee
+from user.models import Employee
 from customer.models import Customer
 
 
