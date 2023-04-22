@@ -36,6 +36,9 @@ class StoreRole(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self) -> str:
+        return f"{self.employee.name}, {self.role}, {self.store.name}"
+
 
 class Stock(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
