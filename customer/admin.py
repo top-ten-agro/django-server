@@ -4,4 +4,6 @@ from .models import Customer
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['name', 'phone', 'address', 'created_at']
+    ordering = ['-created_at']
+    fields = ["name", "phone", "address"]
