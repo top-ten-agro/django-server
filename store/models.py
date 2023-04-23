@@ -22,6 +22,9 @@ class Store(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        ordering = ['-created_at']
+
 
 class StoreRole(models.Model):
     class Role(models.TextChoices):
