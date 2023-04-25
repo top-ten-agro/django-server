@@ -5,9 +5,6 @@ from django.utils import timezone
 
 class CustomUserManager(BaseUserManager):
     def _create_user(self, email, password, **extra_fields):
-        """
-        Create and save a user with the given email and password.
-        """
         if not email:
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
@@ -50,33 +47,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def get_full_name(self):
-        """
-        Return the full name of the user.
-        """
         full_name = '%s %s' % (self.first_name, self.last_name)
         return full_name.strip()
 
     def get_short_name(self):
-        """
-        Return the short name of the user.
-        """
         return self.first_name
 
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
-
-
-class Employee(models.Model):
-    user = models.OneToOneField(
-        CustomUser, on_delete=models.CASCADE, primary_key=True)
-    name = models.CharField(max_length=200)
-    designation = models.CharField(max_length=128)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self) -> str:
-        return self.name
-
-    class Meta:
-        ordering = ['-created_at']

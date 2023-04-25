@@ -11,8 +11,8 @@ class StoreAdmin(admin.ModelAdmin):
 
 @admin.register(StoreRole)
 class StoreRoleAdmin(admin.ModelAdmin):
-    list_display = ["store", "employee", "role", "created_at"]
-    search_fields = ["store__name", "employee__name"]
+    list_display = ["store", "user", "role", "created_at"]
+    search_fields = ["store__name", "user__email"]
     list_filter = ["role"]
     ordering = ["-created_at"]
 

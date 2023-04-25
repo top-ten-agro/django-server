@@ -1,8 +1,11 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from store.models import Store
 from product.models import Product
-from user.models import Employee
 from customer.models import Customer
+
+
+User = get_user_model()
 
 
 class Order(models.Model):
@@ -10,7 +13,7 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, null=True, blank=True)
+        User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -53,7 +56,7 @@ class Transaction(models.Model):
     approved = models.BooleanField(default=False)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_by = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, null=True, blank=True)
+        User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -65,7 +68,7 @@ class Restock(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, null=True, blank=True)
+        User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
