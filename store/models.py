@@ -42,6 +42,9 @@ class StoreRole(models.Model):
     def __str__(self) -> str:
         return f"{self.employee.name}, {self.role}, {self.store.name}"
 
+    class Meta:
+        ordering = ['-created_at']
+
 
 class Stock(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
@@ -49,6 +52,9 @@ class Stock(models.Model):
     quantity = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
 
 class Balance(models.Model):
@@ -58,3 +64,6 @@ class Balance(models.Model):
     cash_in = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']

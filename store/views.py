@@ -1,13 +1,18 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Store, StoreRole
 from .serializers import StoreSerializer, StoreRoleSerializer
 
 
 class StoreViewset(viewsets.ReadOnlyModelViewSet):
-    queryset = Store.objects.all()
+
     serializer_class = StoreSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return Store.objects.filter(employees=self.request.user.employee)
 
     @action(detail=True)
     def roles(self, request, *args, **kwargs):

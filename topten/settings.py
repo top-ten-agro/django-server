@@ -1,16 +1,18 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import timedelta
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-v^jqk93z9_etlnbbzm3idt0x!5ey4(4%f5xg2gvip0)(w!q@a8'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = True
+DEBUG = True if os.environ.get('DEBUG') == 'true' else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(
+    ',') if 'ALLOWED_HOSTS' in os.environ else []
 
 
 INSTALLED_APPS = [
@@ -21,6 +23,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "rest_framework",
+    # "rest_framework_simplejwt.token_blacklist",
+    'corsheaders',
     "customer",
     "product",
     "store",
@@ -31,6 +35,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -43,8 +48,22 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 20, 'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
 }
+
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_URLS').split(
+    ',') if 'CORS_URLS' in os.environ else []
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=300),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": False,
+}
+
 
 ROOT_URLCONF = 'topten.urls'
 
