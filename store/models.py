@@ -49,7 +49,7 @@ class StoreRole(models.Model):
 class Stock(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -60,8 +60,8 @@ class Stock(models.Model):
 class Balance(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    revenue = models.DecimalField(max_digits=12, decimal_places=2)
-    cash_in = models.DecimalField(max_digits=12, decimal_places=2)
+    revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    cash_in = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
