@@ -4,7 +4,10 @@ from .models import Order, Transaction
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['__str__', 'customer',
+                    'created_by', 'approved', 'created_at',]
+    list_display_links = ['__str__', 'customer']
+    search_fields = ['customer__name', 'created_by__name']
 
 
 @admin.register(Transaction)

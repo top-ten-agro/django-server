@@ -7,7 +7,6 @@ from .serializers import StoreSerializer, StoreRoleSerializer
 
 
 class StoreViewset(viewsets.ReadOnlyModelViewSet):
-
     serializer_class = StoreSerializer
     permission_classes = (IsAuthenticated,)
 

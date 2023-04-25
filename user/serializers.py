@@ -1,7 +1,7 @@
-from .models import CustomUser
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from .models import CustomUser, Employee
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,4 +32,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token['email'] = user.email
+        token['employee'] = user.employee.id
         return token
+
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = '__all__'

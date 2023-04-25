@@ -8,23 +8,30 @@ from customer.models import Customer
 class Order(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    products = models.ManyToManyField(
-        Product, through='OrderItem', related_name='orders')
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         Employee, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     class Meta:
         ordering = ['-created_at']
 
+    def __str__(self) -> str:
+        return f"order id - {self.id}"
+
+
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
+    rate = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         ordering = ['-created_at']
+
 
 class Transaction(models.Model):
 
@@ -44,11 +51,34 @@ class Transaction(models.Model):
     title = models.CharField(max_length=256)
     note = models.TextField(max_length=1026, null=True, blank=True)
     approved = models.BooleanField(default=False)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_by = models.ForeignKey(
         Employee, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Restock(models.Model):
+    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    approved = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        Employee, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class RestockItem(models.Model):
+    restock = models.ForeignKey(
+        Restock, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
