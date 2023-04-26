@@ -11,7 +11,7 @@ class StoreViewset(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Store.objects.filter(employees=self.request.user.employee)
+        return Store.objects.filter(employees=self.request.user)
 
     @action(detail=True)
     def roles(self, request, *args, **kwargs):
