@@ -39,7 +39,7 @@ class StoreRole(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.user.email}"
+        return f"{self.role}, {self.store}"
 
     class Meta:
         ordering = ['-created_at']
@@ -49,11 +49,15 @@ class Stock(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    stock_created = models.DateTimeField(auto_now_add=True)
+    stock_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.product} - {self.store}"
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-stock_created']
+        unique_together = ['store', 'product']
 
 
 class Balance(models.Model):

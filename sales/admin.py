@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, Transaction
+from .models import Order, Transaction, Restock
 
 
 @admin.register(Order)
@@ -12,4 +12,9 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Restock)
+class RestockAdmin(admin.ModelAdmin):
     pass

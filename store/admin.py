@@ -19,7 +19,7 @@ class StoreRoleAdmin(admin.ModelAdmin):
 
 @admin.register(Stock)
 class StockAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["product", "store",  "quantity", "stock_updated"]
 
 
 @admin.register(Balance)

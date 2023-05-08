@@ -6,7 +6,8 @@ from .models import CustomUser
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'password', 'email', 'first_name', 'last_name')
+        fields = ('id', 'password', 'email',
+                  'first_name', 'last_name', 'phone')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -19,6 +20,8 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name', instance.first_name)
         instance.last_name = validated_data.get(
             'last_name', instance.last_name)
+        instance.phone = validated_data.get(
+            'phone', instance.phone)
         password = validated_data.get('password', None)
         if password is not None:
             instance.set_password(password)
