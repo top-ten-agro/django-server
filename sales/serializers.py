@@ -1,5 +1,10 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_flex_fields import FlexFieldsModelSerializer
 from .models import Order, OrderItem, Transaction, Restock, RestockItem
+
+
+User = get_user_model()
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -30,17 +35,27 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class RestockItemSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = RestockItem
         fields = ('product', 'quantity', )
 
 
-class RestockSerializer(serializers.ModelSerializer):
+class StockCreatedBySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'id',)
+
+
+class RestockSerializer(FlexFieldsModelSerializer):
     items = RestockItemSerializer(many=True)
 
     class Meta:
         model = Restock
         fields = '__all__'
+        expandable_fields = {
+            'created_by': (StockCreatedBySerializer, {'many': False})
+        }
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
