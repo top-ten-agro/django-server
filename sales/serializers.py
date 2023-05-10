@@ -38,7 +38,7 @@ class RestockItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RestockItem
-        fields = ('product', 'quantity', )
+        fields = ('id', 'product', 'quantity',)
 
 
 class StockCreatedBySerializer(serializers.ModelSerializer):
@@ -63,3 +63,11 @@ class RestockSerializer(FlexFieldsModelSerializer):
         for item_data in items_data:
             RestockItem.objects.create(restock=restock, **item_data)
         return restock
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items')
+        instance.approved = validated_data.get('approved', False)
+        RestockItem.objects.filter(restock=instance).delete()
+        for item_data in items_data:
+            RestockItem.objects.create(restock=instance, **item_data)
+        return instance

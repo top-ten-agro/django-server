@@ -6,7 +6,6 @@ class Product(models.Model):
     group_name = models.CharField(max_length=256)
     price = models.DecimalField(max_digits=8, decimal_places=2)
     published = models.BooleanField(default=True)
-    archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

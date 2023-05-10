@@ -17,4 +17,6 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(Restock)
 class RestockAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['id', 'store',
+                    'created_by', 'approved', 'created_at',]
+    list_display_links = ['id', 'store']

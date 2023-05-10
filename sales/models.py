@@ -33,6 +33,7 @@ class OrderItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        unique_together = ['order', 'product']
         ordering = ['-created_at']
 
 
@@ -75,6 +76,9 @@ class Restock(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def __str__(self) -> str:
+        return f"Restock {self.id}"
+
 
 class RestockItem(models.Model):
     restock = models.ForeignKey(
@@ -84,4 +88,5 @@ class RestockItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        unique_together = ['restock', 'product']
         ordering = ['-created_at']

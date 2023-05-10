@@ -42,6 +42,7 @@ class StoreRole(models.Model):
         return f"{self.role}, {self.store}"
 
     class Meta:
+        unique_together = ['store', 'user']
         ordering = ['-created_at']
 
 
@@ -69,4 +70,5 @@ class Balance(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        unique_together = ['store', 'customer']
         ordering = ['-created_at']
