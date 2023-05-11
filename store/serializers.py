@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Store, StoreRole, Stock, Balance
 from product.serializers import ProductSerializer
+from customer.serializers import CustomerSerializer
 
 
 class StoreSerializer(serializers.ModelSerializer):
@@ -24,6 +25,8 @@ class StoreProductSerializer(serializers.ModelSerializer):
 
 
 class BalanceSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer()
+
     class Meta:
         model = Balance
         fields = '__all__'

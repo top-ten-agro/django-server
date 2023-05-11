@@ -47,8 +47,10 @@ class StoreRole(models.Model):
 
 
 class Stock(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    store = models.ForeignKey(
+        Store, on_delete=models.CASCADE, related_name='stocks')
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='stocks')
     quantity = models.IntegerField(default=0)
     stock_created = models.DateTimeField(auto_now_add=True)
     stock_updated = models.DateTimeField(auto_now=True)

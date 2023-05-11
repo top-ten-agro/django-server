@@ -11,6 +11,7 @@ User = get_user_model()
 class Order(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True)

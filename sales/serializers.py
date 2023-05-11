@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 from .models import Order, OrderItem, Transaction, Restock, RestockItem
-
+from customer.serializers import CustomerSerializer
 
 User = get_user_model()
 
@@ -13,19 +13,51 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ('product', 'quantity', 'rate',)
 
 
-class OrderSerializer(serializers.ModelSerializer):
+class CreatedBySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'id',)
+
+
+class OrderSerializer(FlexFieldsModelSerializer):
     items = OrderItemSerializer(many=True)
 
     class Meta:
         model = Order
         fields = '__all__'
+        expandable_fields = {
+            'created_by': (CreatedBySerializer),
+            'customer': (CustomerSerializer, {'fields': ['id', 'name']})
+        }
 
     def create(self, validated_data):
+        amount = 0
+        validated_data.pop('amount')
         items_data = validated_data.pop('items')
-        order = Order.objects.create(**validated_data)
-        for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
+        for item in items_data:
+            amount += item.get('rate') * item.get('quantity')
+
+        order = Order.objects.create(**validated_data, amount=amount)
+
+        for item in items_data:
+            OrderItem.objects.create(order=order, **item)
+
         return order
+
+    def update(self, instance, validated_data):
+        amount = 0
+        items_data = validated_data.pop('items')
+
+        for item in items_data:
+            print(item.get('rate') * item.get('quantity'))
+            amount += item.get('rate') * item.get('quantity')
+
+        instance.amount = amount
+        OrderItem.objects.filter(order=instance).delete()
+
+        for item in items_data:
+            OrderItem.objects.create(order=instance, **item)
+        return instance
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -41,12 +73,6 @@ class RestockItemSerializer(serializers.ModelSerializer):
         fields = ('id', 'product', 'quantity',)
 
 
-class StockCreatedBySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'id',)
-
-
 class RestockSerializer(FlexFieldsModelSerializer):
     items = RestockItemSerializer(many=True)
 
@@ -54,7 +80,7 @@ class RestockSerializer(FlexFieldsModelSerializer):
         model = Restock
         fields = '__all__'
         expandable_fields = {
-            'created_by': (StockCreatedBySerializer, {'many': False})
+            'created_by': (CreatedBySerializer, {'many': False})
         }
 
     def create(self, validated_data):

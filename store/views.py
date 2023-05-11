@@ -1,9 +1,9 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, pagination
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Store, StoreRole
-from .serializers import StoreSerializer, StoreRoleSerializer, StoreProductSerializer
+from .models import Store, StoreRole, Balance
+from .serializers import StoreSerializer, StoreRoleSerializer, StoreProductSerializer, BalanceSerializer
 
 
 class StoreViewset(viewsets.ReadOnlyModelViewSet):
@@ -42,3 +42,37 @@ class StoreRoleViewset(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return StoreRole.objects.filter(user=self.request.user)
+
+
+class BalancePagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+
+
+class BalanceViewset(viewsets.ReadOnlyModelViewSet):
+    serializer_class = BalanceSerializer
+    pagination_class = BalancePagination
+    permission_classes = (IsAuthenticated,)
+    filterset_fields = ('customer', 'store', 'id')
+    ordering_fields = ('customer', 'cash_in', 'revenue', 'created_at')
+
+    def get_queryset(self):
+        employee = Balance.objects.filter(store__employees=self.request.user)
+        return employee
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        customer_id = self.request.query_params.get("customer.id", None)
+        name = self.request.query_params.get("customer.name", None)
+        phone = self.request.query_params.get("customer.phone", None)
+
+        if customer_id is not None:
+            queryset = queryset.filter(customer=customer_id)
+
+        if name is not None:
+            queryset = queryset.filter(customer__name__startswith=name)
+
+        if phone is not None:
+            queryset = queryset.filter(customer__phone__startswith=phone)
+
+        return queryset

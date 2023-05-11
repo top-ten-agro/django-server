@@ -13,3 +13,5 @@ class ProductViewset(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = ProductPagination
+    filterset_fields = ('stores',)
+    ordering_fields = ('name', 'created-at',)
