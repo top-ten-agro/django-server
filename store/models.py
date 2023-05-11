@@ -62,12 +62,17 @@ class Stock(models.Model):
 
 
 class Balance(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name='balances')
+    store = models.ForeignKey(
+        Store, on_delete=models.CASCADE, related_name='balances')
     revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cash_in = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.customer}-{self.store}"
 
     class Meta:
         unique_together = ['store', 'customer']

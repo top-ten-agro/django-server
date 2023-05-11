@@ -26,6 +26,13 @@ class StoreViewset(viewsets.ReadOnlyModelViewSet):
         serializer = StoreProductSerializer(products, many=True)
         return Response(serializer.data)
 
+    @action(detail=True)
+    def customers(self, request, *args, **kwargs):
+        store = Store.objects.get(pk=self.kwargs.get("pk"))
+        products = store.stock_set.all()
+        serializer = StoreProductSerializer(products, many=True)
+        return Response(serializer.data)
+
 
 class StoreRoleViewset(viewsets.ReadOnlyModelViewSet):
     queryset = StoreRole.objects.all()

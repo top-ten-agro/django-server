@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from product.views import ProductViewset
 from sales.views import OrderViewset, TransactionViewset, RestockViewset
 from store.views import StoreViewset, StoreRoleViewset
+from customer.views import CustomerViewset
 
 router = DefaultRouter()
 router.register(r"products", ProductViewset, basename='products')
@@ -11,6 +12,7 @@ router.register(r"roles", StoreRoleViewset, basename='roles')
 router.register(r'orders',  OrderViewset, basename="orders")
 router.register(r'transactions',  TransactionViewset, basename="transactions")
 router.register(r'restocks',  RestockViewset, basename="restocks")
+router.register(r'customers',  CustomerViewset, basename="customers")
 
 urlpatterns = [
     path('', include(router.urls)),

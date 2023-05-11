@@ -24,4 +24,4 @@ class StockAdmin(admin.ModelAdmin):
 
 @admin.register(Balance)
 class BalanceAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['customer', 'store', 'revenue', 'cash_in']

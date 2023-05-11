@@ -1,12 +1,6 @@
 from rest_framework import serializers
-from .models import Store, StoreRole, Stock
+from .models import Store, StoreRole, Stock, Balance
 from product.serializers import ProductSerializer
-
-
-class StoreRoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StoreRole
-        fields = "__all__"
 
 
 class StoreSerializer(serializers.ModelSerializer):
@@ -15,9 +9,21 @@ class StoreSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "address", "created_at", "updated_at",)
 
 
+class StoreRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoreRole
+        fields = "__all__"
+
+
 class StoreProductSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
 
     class Meta:
         model = Stock
+        fields = '__all__'
+
+
+class BalanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Balance
         fields = '__all__'
