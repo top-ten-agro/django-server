@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 from .models import Order, OrderItem, Transaction, Restock, RestockItem
@@ -37,10 +38,10 @@ class OrderSerializer(FlexFieldsModelSerializer):
         for item in items_data:
             amount += item.get('rate') * item.get('quantity')
 
-        order = Order.objects.create(**validated_data, amount=amount)
-
-        for item in items_data:
-            OrderItem.objects.create(order=order, **item)
+        with transaction.atomic():
+            order = Order.objects.create(**validated_data, amount=amount)
+            for item in items_data:
+                OrderItem.objects.create(order=order, **item)
 
         return order
 
@@ -49,14 +50,15 @@ class OrderSerializer(FlexFieldsModelSerializer):
         items_data = validated_data.pop('items')
 
         for item in items_data:
-            print(item.get('rate') * item.get('quantity'))
             amount += item.get('rate') * item.get('quantity')
 
         instance.amount = amount
-        OrderItem.objects.filter(order=instance).delete()
+        with transaction.atomic():
+            OrderItem.objects.filter(order=instance).delete()
+            for item in items_data:
+                OrderItem.objects.create(order=instance, **item)
+            instance.save()
 
-        for item in items_data:
-            OrderItem.objects.create(order=instance, **item)
         return instance
 
 
@@ -89,15 +91,17 @@ class RestockSerializer(FlexFieldsModelSerializer):
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
-        restock = Restock.objects.create(**validated_data)
-        for item_data in items_data:
-            RestockItem.objects.create(restock=restock, **item_data)
+        with transaction.atomic():
+            restock = Restock.objects.create(**validated_data)
+            for item_data in items_data:
+                RestockItem.objects.create(restock=restock, **item_data)
         return restock
 
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items')
-        instance.approved = validated_data.get('approved', False)
-        RestockItem.objects.filter(restock=instance).delete()
-        for item_data in items_data:
-            RestockItem.objects.create(restock=instance, **item_data)
+        with transaction.atomic():
+            RestockItem.objects.filter(restock=instance).delete()
+            for item_data in items_data:
+                RestockItem.objects.create(restock=instance, **item_data)
+
         return instance
