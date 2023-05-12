@@ -45,14 +45,15 @@ class Transaction(models.Model):
         OUT = "OUT"
 
     class CATEGORIES(models.TextChoices):
-        RECOVERY = "RECOVERY"
+        SALES = "SALES"
         TRANSPORT = "TRANSPORT"
         BILL = "BILL"
 
     type = models.CharField(max_length=3, choices=TYPES.choices)
     category = models.CharField(max_length=30, choices=CATEGORIES.choices)
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
+    customer = models.ForeignKey(
+        Customer, on_delete=models.DO_NOTHING, null=True, blank=True)
     title = models.CharField(max_length=256)
     note = models.TextField(max_length=1026, null=True, blank=True)
     approved = models.BooleanField(default=False)

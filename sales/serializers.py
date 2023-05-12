@@ -60,10 +60,14 @@ class OrderSerializer(FlexFieldsModelSerializer):
         return instance
 
 
-class TransactionSerializer(serializers.ModelSerializer):
+class TransactionSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Transaction
         fields = '__all__'
+        expandable_fields = {
+            'created_by': (CreatedBySerializer),
+            'customer': (CustomerSerializer, {'fields': ['id', 'name']})
+        }
 
 
 class RestockItemSerializer(serializers.ModelSerializer):

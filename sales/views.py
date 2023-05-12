@@ -1,6 +1,7 @@
 from django.db.models import F
 from django.db import transaction
 from rest_framework import viewsets, permissions, pagination, status
+from rest_framework.exceptions import ValidationError
 from django_filters import rest_framework as dj_filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -30,17 +31,27 @@ class OrderViewset(viewsets.ModelViewSet):
         queryset = super().filter_queryset(queryset)
         email = self.request.query_params.get("created_by.email", None)
         if email is not None:
-            queryset = queryset.filter(created_by__email__startswith=email)
+            queryset = queryset.filter(created_by__email__istartswith=email)
+        name = self.request.query_params.get("customer.name", None)
+        if name is not None:
+            queryset = queryset.filter(customer__name__istartswith=name)
         return queryset
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
+    def perform_update(self, serializer):
+        approved = serializer.validated_data.get("approved", False)
+        if approved == True:
+            raise ValidationError(
+                'This row is immutable and cannot be updated.')
+        serializer.save()
+
     @action(detail=True, methods=['put'])
     def approve(self, request, pk=None):
         order = self.get_object()
         if order.approved == True:
-            return Response({"message": "Restock already approved."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Order already approved."}, status=status.HTTP_403_FORBIDDEN)
         order.approved = True
         items = OrderItem.objects.filter(order=order)
 
@@ -78,10 +89,66 @@ class TransactionViewset(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    filterset_fields = ('store', 'customer', 'created_by',)
+    filterset_fields = ('store', 'customer', 'created_by',
+                        'id', 'approved', 'title', 'category', 'type')
+    ordering_fields = ('customer', 'category', 'type',
+                       'created_by', 'id', 'approved', 'amount')
+
+    def get_queryset(self):
+        return self.queryset.filter(store__employees=self.request.user)
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        email = self.request.query_params.get("created_by.email", None)
+        if email is not None:
+            queryset = queryset.filter(created_by__email__istartswith=email)
+        name = self.request.query_params.get("customer.name", None)
+        if name is not None:
+            queryset = queryset.filter(customer__name__istartswith=name)
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+    def perform_update(self, serializer):
+        approved = serializer.validated_data.get("approved", False)
+        if approved == True:
+            raise ValidationError(
+                'This row is immutable and cannot be updated.')
+        serializer.save()
+
+    @action(detail=True, methods=['put'])
+    def approve(self, request, pk=None):
+        txn = self.get_object()
+        if txn.approved == True:
+            return Response({"message": "Transaction already approved."}, status=status.HTTP_403_FORBIDDEN)
+        txn.approved = True
+
+        if txn.customer is None:
+            txn.save(update_fields=['approved'])
+            return Response({"success": True})
+
+        with transaction.atomic():
+            txn.save(update_fields=['approved'])
+            Balance.objects.filter(store=txn.store, customer=txn.customer).update(
+                cash_in=F('cash_in')+(txn.amount if txn.type == Transaction.TYPES.IN else (-txn.amount)))
+
+        return Response({"success": True})
+
+    @action(detail=True, methods=['delete'])
+    def remove(self, request, pk=None):
+        txn = self.get_object()
+
+        if txn.approved == False or txn.customer is None:
+            txn.delete()
+            return Response({"success": True})
+
+        with transaction.atomic():
+            Balance.objects.filter(store=txn.store, customer=txn.customer).update(
+                cash_in=F('cash_in')+(txn.amount if txn.type == Transaction.TYPES.OUT else (-txn.amount)))
+            txn.delete()
+
+        return Response({"success": True})
 
 
 class RestockViewset(viewsets.ModelViewSet):
@@ -100,14 +167,15 @@ class RestockViewset(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         approved = serializer.validated_data.get("approved", False)
         if approved == True:
-            return Response({"message": "Restock already approved."}, status=status.HTTP_403_FORBIDDEN)
+            raise ValidationError(
+                'This row is immutable and cannot be updated.')
         serializer.save()
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         email = self.request.query_params.get("created_by.email", None)
         if email is not None:
-            queryset = queryset.filter(created_by__email__startswith=email)
+            queryset = queryset.filter(created_by__email__istartswith=email)
         return queryset
 
     @action(detail=True, methods=['put'])
