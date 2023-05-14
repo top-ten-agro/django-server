@@ -90,9 +90,9 @@ class TransactionViewset(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     permission_classes = (permissions.IsAuthenticated,)
     filterset_fields = ('store', 'customer', 'created_by',
-                        'id', 'approved', 'title', 'category', 'type')
-    ordering_fields = ('customer', 'category', 'type',
-                       'created_by', 'id', 'approved', 'amount')
+                        'id', 'approved', 'title', 'category',)
+    ordering_fields = ('customer', 'category', 'created_by',
+                       'id', 'approved', 'cash_in', 'cash_out')
 
     def get_queryset(self):
         return self.queryset.filter(store__employees=self.request.user)
@@ -131,7 +131,7 @@ class TransactionViewset(viewsets.ModelViewSet):
         with transaction.atomic():
             txn.save(update_fields=['approved'])
             Balance.objects.filter(store=txn.store, customer=txn.customer).update(
-                cash_in=F('cash_in')+(txn.amount if txn.type == Transaction.TYPES.IN else (-txn.amount)))
+                cash_in=F('cash_in') + txn.cash_in - txn.cash_out)
 
         return Response({"success": True})
 
@@ -145,7 +145,7 @@ class TransactionViewset(viewsets.ModelViewSet):
 
         with transaction.atomic():
             Balance.objects.filter(store=txn.store, customer=txn.customer).update(
-                cash_in=F('cash_in')+(txn.amount if txn.type == Transaction.TYPES.OUT else (-txn.amount)))
+                cash_in=F('cash_in') - txn.cash_in + txn.cash_out)
             txn.delete()
 
         return Response({"success": True})

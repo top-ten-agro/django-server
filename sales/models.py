@@ -39,17 +39,11 @@ class OrderItem(models.Model):
 
 
 class Transaction(models.Model):
-
-    class TYPES(models.TextChoices):
-        IN = "IN"
-        OUT = "OUT"
-
     class CATEGORIES(models.TextChoices):
         SALES = "SALES"
         TRANSPORT = "TRANSPORT"
         BILL = "BILL"
 
-    type = models.CharField(max_length=3, choices=TYPES.choices)
     category = models.CharField(max_length=30, choices=CATEGORIES.choices)
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     customer = models.ForeignKey(
@@ -57,7 +51,8 @@ class Transaction(models.Model):
     title = models.CharField(max_length=256)
     note = models.TextField(max_length=1026, null=True, blank=True)
     approved = models.BooleanField(default=False)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    cash_in = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cash_out = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

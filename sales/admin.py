@@ -12,8 +12,8 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title', 'type', 'category', 'created_by',
-                    'customer', 'approved', 'amount', 'created_at',]
+    list_display = ['id', 'title', 'category',
+                    'customer', 'approved', 'cash_in', 'cash_out', 'created_by', 'created_at',]
     list_display_links = ['id', 'title']
 
 
