@@ -40,7 +40,7 @@ class BalanceViewset(viewsets.ReadOnlyModelViewSet):
     pagination_class = BalancePagination
     permission_classes = (IsAuthenticated,)
     filterset_fields = ('customer', 'store', 'id')
-    ordering_fields = ('customer', 'cash_in', 'revenue', 'created_at')
+    ordering_fields = ('customer', 'cash_in', 'sales', 'created_at')
 
     def get_queryset(self):
         employee = Balance.objects.filter(store__employees=self.request.user)

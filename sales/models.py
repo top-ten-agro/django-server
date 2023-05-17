@@ -1,5 +1,7 @@
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 from store.models import Store
 from product.models import Product
 from customer.models import Customer
@@ -11,12 +13,22 @@ User = get_user_model()
 class Order(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[
+        MinValueValidator(0)])
+    comission = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[
+                                    MinValueValidator(0), MaxValueValidator(100)])
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True)
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders_created')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders_approved')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def total(self):
+        return self.amount*(Decimal('1') - (self.comission / Decimal('100')))
 
     class Meta:
         ordering = ['-created_at']
@@ -29,8 +41,9 @@ class OrderItem(models.Model):
     order = models.ForeignKey(
         Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    rate = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
+    rate = models.DecimalField(max_digits=10, decimal_places=2, validators=[
+                               MinValueValidator(0)])
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -51,10 +64,15 @@ class Transaction(models.Model):
     title = models.CharField(max_length=256)
     note = models.TextField(max_length=1026, null=True, blank=True)
     approved = models.BooleanField(default=False)
-    cash_in = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    cash_out = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cash_in = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[
+        MinValueValidator(0)])
+    cash_out = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[
+        MinValueValidator(0)])
     created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True)
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions_created')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions_approved')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -66,7 +84,10 @@ class Restock(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True)
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='restocks_created')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='restocks_approved')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -81,7 +102,7 @@ class RestockItem(models.Model):
     restock = models.ForeignKey(
         Restock, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

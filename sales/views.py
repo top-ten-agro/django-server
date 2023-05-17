@@ -1,4 +1,6 @@
+from decimal import Decimal
 from django.db.models import F
+from django.utils import timezone
 from django.db import transaction
 from rest_framework import viewsets, permissions, pagination, status
 from rest_framework.exceptions import ValidationError
@@ -53,12 +55,14 @@ class OrderViewset(viewsets.ModelViewSet):
         if order.approved == True:
             return Response({"message": "Order already approved."}, status=status.HTTP_403_FORBIDDEN)
         order.approved = True
+        order.approved_by = request.user.id
+        order.approved_at = timezone.now()
         items = OrderItem.objects.filter(order=order)
 
         with transaction.atomic():
             order.save(update_fields=['approved'])
             Balance.objects.filter(store=order.store, customer=order.customer).update(
-                revenue=F('revenue')+order.amount)
+                sales=F('sales') + order.total)
             for item in items:
                 Stock.objects.filter(product=item.product, store=order.store).update(
                     quantity=F('quantity')-item.quantity)
@@ -74,9 +78,10 @@ class OrderViewset(viewsets.ModelViewSet):
             return Response({"success": True})
 
         items = OrderItem.objects.filter(order=order)
+
         with transaction.atomic():
             Balance.objects.filter(store=order.store, customer=order.customer).update(
-                revenue=F('revenue')-order.amount)
+                sales=F('sales') - order.total)
             for item in items:
                 Stock.objects.filter(product=item.product, store=order.store).update(
                     quantity=F('quantity')+item.quantity)
@@ -123,6 +128,8 @@ class TransactionViewset(viewsets.ModelViewSet):
         if txn.approved == True:
             return Response({"message": "Transaction already approved."}, status=status.HTTP_403_FORBIDDEN)
         txn.approved = True
+        txn.approved_by = request.user.id
+        txn.approved_at = timezone.now()
 
         if txn.customer is None:
             txn.save(update_fields=['approved'])
@@ -184,6 +191,8 @@ class RestockViewset(viewsets.ModelViewSet):
         if restock.approved == True:
             return Response({"message": "Restock already approved."}, status=status.HTTP_403_FORBIDDEN)
         restock.approved = True
+        restock.approved_by = request.user.id
+        restock.approved_at = timezone.now()
         restock_items = RestockItem.objects.filter(restock=restock)
 
         with transaction.atomic():

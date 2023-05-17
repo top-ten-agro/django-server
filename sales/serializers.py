@@ -22,6 +22,8 @@ class CreatedBySerializer(serializers.ModelSerializer):
 
 class OrderSerializer(FlexFieldsModelSerializer):
     items = OrderItemSerializer(many=True)
+    total = serializers.DecimalField(
+        max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
         model = Order

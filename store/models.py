@@ -68,7 +68,7 @@ class Balance(models.Model):
         Customer, on_delete=models.CASCADE, related_name='balances')
     store = models.ForeignKey(
         Store, on_delete=models.CASCADE, related_name='balances')
-    revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cash_in = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
