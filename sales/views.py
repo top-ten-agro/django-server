@@ -55,7 +55,7 @@ class OrderViewset(viewsets.ModelViewSet):
         if order.approved == True:
             return Response({"message": "Order already approved."}, status=status.HTTP_403_FORBIDDEN)
         order.approved = True
-        order.approved_by = request.user.id
+        order.approved_by = request.user
         order.approved_at = timezone.now()
         items = OrderItem.objects.filter(order=order)
 
@@ -128,7 +128,7 @@ class TransactionViewset(viewsets.ModelViewSet):
         if txn.approved == True:
             return Response({"message": "Transaction already approved."}, status=status.HTTP_403_FORBIDDEN)
         txn.approved = True
-        txn.approved_by = request.user.id
+        txn.approved_by = request.user
         txn.approved_at = timezone.now()
 
         if txn.customer is None:
@@ -191,7 +191,7 @@ class RestockViewset(viewsets.ModelViewSet):
         if restock.approved == True:
             return Response({"message": "Restock already approved."}, status=status.HTTP_403_FORBIDDEN)
         restock.approved = True
-        restock.approved_by = request.user.id
+        restock.approved_by = request.user
         restock.approved_at = timezone.now()
         restock_items = RestockItem.objects.filter(restock=restock)
 

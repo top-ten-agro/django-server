@@ -1,3 +1,4 @@
+
 from rest_framework import viewsets, permissions, pagination
 from .serializers import ProductSerializer
 from .models import Product
@@ -13,5 +14,5 @@ class ProductViewset(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = ProductPagination
-    filterset_fields = ('stores',)
+    filterset_fields = ('stores', 'name', 'pack_size')
     ordering_fields = ('name', 'created-at',)

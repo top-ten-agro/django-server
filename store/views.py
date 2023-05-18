@@ -75,18 +75,23 @@ class StockViewset(viewsets.ReadOnlyModelViewSet):
     pagination_class = StockPagination
     permission_classes = (IsAuthenticated,)
     filterset_fields = ('store', 'id')
-    ordering_fields = ('product__price', 'product__name', 'quantity',)
+    ordering_fields = ('product__price', 'product__name',
+                       'product__pack_size', 'quantity',)
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         product_id = self.request.query_params.get("product.id", None)
         name = self.request.query_params.get("product.name", None)
+        size = self.request.query_params.get("product.pack_size", None)
 
         if product_id is not None:
             queryset = queryset.filter(product=product_id)
 
         if name is not None:
             queryset = queryset.filter(product__name__istartswith=name)
+
+        if size is not None:
+            queryset = queryset.filter(product__pack_size__istartswith=size)
 
         return queryset
 
