@@ -22,8 +22,7 @@ class CreatedBySerializer(serializers.ModelSerializer):
 
 class OrderSerializer(FlexFieldsModelSerializer):
     items = OrderItemSerializer(many=True)
-    total = serializers.DecimalField(
-        max_digits=5, decimal_places=2, read_only=True)
+    total = serializers.ReadOnlyField()
 
     class Meta:
         model = Order
@@ -34,27 +33,30 @@ class OrderSerializer(FlexFieldsModelSerializer):
         }
 
     def create(self, validated_data):
-        amount = 0
-        validated_data.pop('amount')
+        subtotal = 0
+        validated_data.pop('subtotal')
         items_data = validated_data.pop('items')
         for item in items_data:
-            amount += item.get('rate') * item.get('quantity')
+            subtotal += item.get('rate') * item.get('quantity')
 
         with transaction.atomic():
-            order = Order.objects.create(**validated_data, amount=amount)
+            order = Order.objects.create(**validated_data, subtotal=subtotal)
             for item in items_data:
                 OrderItem.objects.create(order=order, **item)
 
         return order
 
     def update(self, instance, validated_data):
-        amount = 0
+        subtotal = 0
         items_data = validated_data.pop('items')
+        commission = validated_data.pop('commission')
 
         for item in items_data:
-            amount += item.get('rate') * item.get('quantity')
+            subtotal += item.get('rate') * item.get('quantity')
 
-        instance.amount = amount
+        instance.subtotal = subtotal
+        instance.commission = commission
+
         with transaction.atomic():
             OrderItem.objects.filter(order=instance).delete()
             for item in items_data:

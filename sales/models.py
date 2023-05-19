@@ -13,10 +13,10 @@ User = get_user_model()
 class Order(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[
-        MinValueValidator(0)])
-    comission = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[
-                                    MinValueValidator(0), MaxValueValidator(100)])
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    commission = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[
+        MinValueValidator(0), MaxValueValidator(100)])
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders_created')
@@ -26,9 +26,9 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
-    def total(self):
-        return self.amount*(Decimal('1') - (self.comission / Decimal('100')))
+    def save(self, *args, **kwargs):
+        self.total = self.subtotal * (1 - self.commission / 100)
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-created_at']

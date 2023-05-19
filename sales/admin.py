@@ -5,7 +5,7 @@ from .models import Order, Transaction, Restock
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'customer',
-                    'created_by', 'approved', 'amount', 'created_at',]
+                    'created_by', 'approved', 'total', 'created_at',]
     list_display_links = ['__str__', 'customer']
     search_fields = ['customer__name', 'created_by__name']
 

@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import CustomUser
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'password', 'email',

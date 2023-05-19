@@ -24,7 +24,7 @@ class OrderViewset(viewsets.ModelViewSet):
     pagination_class = Pagination
     permission_classes = (permissions.IsAuthenticated, HasOrderPermission,)
     filterset_fields = ('store', 'customer', 'created_by', 'approved')
-    ordering_fields = ('created_at', 'approved', 'created_by',)
+    ordering_fields = ('created_at', 'approved', 'total', 'created_by',)
 
     def get_queryset(self):
         return self.queryset.filter(store__employees=self.request.user)
@@ -199,12 +199,14 @@ class RestockViewset(viewsets.ModelViewSet):
             restock.save(update_fields=['approved'])
             for item in restock_items:
                 stock, created = Stock.objects.get_or_create(
-                    store=restock.store, product=item.product,  defaults={
+                    store=restock.store, product=item.product, defaults={
                         "quantity": item.quantity
                     })
-                if not created:
+                if not created and item.quantity > 0:
                     stock.quantity += item.quantity
                     stock.save(update_fields=['quantity',])
+                if item.quantity == 0:
+                    item.delete()
 
         return Response({"success": True})
 

@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from .models import Store, StoreRole, Stock, Balance
 
@@ -24,4 +25,10 @@ class StockAdmin(admin.ModelAdmin):
 
 @admin.register(Balance)
 class BalanceAdmin(admin.ModelAdmin):
-    list_display = ['customer', 'store', 'sales', 'cash_in']
+    list_display = ['customer', 'officer', 'store', 'sales', 'cash_in']
+    fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('customer',  'store', 'sales', 'cash_in'),
+        }),
+    )

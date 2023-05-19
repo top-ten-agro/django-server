@@ -1,9 +1,11 @@
+from django.db.models import Q, Prefetch
 from rest_framework import viewsets, pagination
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Store, StoreRole, Balance, Stock
 from .serializers import StoreSerializer, StoreRoleSerializer, StoreProductSerializer, BalanceSerializer
+from .permissions import HasBalancePermission
 
 
 class StoreViewset(viewsets.ReadOnlyModelViewSet):
@@ -16,7 +18,21 @@ class StoreViewset(viewsets.ReadOnlyModelViewSet):
     @action(detail=True)
     def roles(self, request, *args, **kwargs):
         roles = StoreRole.objects.filter(store=self.kwargs.get("pk"))
-        serializer = StoreRoleSerializer(roles, many=True)
+        serializer = StoreRoleSerializer(
+            roles, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    @action(detail=True)
+    def customers(self, request, *args, **kwargs):
+        query = Balance.objects.filter(store=self.kwargs.get("pk"))
+        role = StoreRole.objects.filter(
+            store=self.kwargs.get("pk"), user=self.request.user).first()
+        if role is None:
+            return Response({"message": "Forbidden"}, status=400,)
+        if role.role == StoreRole.Role.OFFICER:
+            query = query.filter(officer=role)
+        serializer = BalanceSerializer(
+            query, many=True, context={"request": request})
         return Response(serializer.data)
 
 
@@ -32,14 +48,14 @@ class StoreRoleViewset(viewsets.ReadOnlyModelViewSet):
 
 class BalancePagination(pagination.PageNumberPagination):
     page_size = 10
-    page_size_query_param = "page_size"
+    page_size_query_param = "per_page"
 
 
-class BalanceViewset(viewsets.ReadOnlyModelViewSet):
+class BalanceViewset(viewsets.ModelViewSet):
     serializer_class = BalanceSerializer
     pagination_class = BalancePagination
-    permission_classes = (IsAuthenticated,)
-    filterset_fields = ('customer', 'store', 'id')
+    permission_classes = (IsAuthenticated, HasBalancePermission,)
+    filterset_fields = ('customer', 'store', 'id', 'officer')
     ordering_fields = ('customer', 'cash_in', 'sales', 'created_at')
 
     def get_queryset(self):
@@ -51,6 +67,10 @@ class BalanceViewset(viewsets.ReadOnlyModelViewSet):
         customer_id = self.request.query_params.get("customer.id", None)
         name = self.request.query_params.get("customer.name", None)
         phone = self.request.query_params.get("customer.phone", None)
+        officer = self.request.query_params.get("officer", None)
+
+        if officer is not None:
+            queryset = queryset.filter(officer=officer)
 
         if customer_id is not None:
             queryset = queryset.filter(customer=customer_id)
@@ -66,7 +86,7 @@ class BalanceViewset(viewsets.ReadOnlyModelViewSet):
 
 class StockPagination(pagination.PageNumberPagination):
     page_size = 10
-    page_size_query_param = "page_size"
+    page_size_query_param = "per_page"
 
 
 class StockViewset(viewsets.ReadOnlyModelViewSet):

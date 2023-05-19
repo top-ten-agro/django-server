@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q, F
 from django.contrib.auth import get_user_model
 from product.models import Product
 from customer.models import Customer
@@ -31,15 +32,17 @@ class StoreRole(models.Model):
         OFFICER = "OFFICER"
         DIRECTOR = "DIRECTOR"
 
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(
+        Store, on_delete=models.CASCADE, related_name='roles')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='roles')
     role = models.CharField(
         max_length=10, choices=Role.choices, default=Role.OFFICER)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.role}, {self.store}"
+        return f"{self.user.first_name}, {self.role.lower()}, {self.store}"
 
     class Meta:
         unique_together = ['store', 'user']
@@ -68,6 +71,13 @@ class Balance(models.Model):
         Customer, on_delete=models.CASCADE, related_name='balances')
     store = models.ForeignKey(
         Store, on_delete=models.CASCADE, related_name='balances')
+    officer = models.ForeignKey(
+        StoreRole,
+        on_delete=models.DO_NOTHING,
+        blank=True,
+        null=True,
+        related_name='officers',
+        limit_choices_to=Q(store=F('store')))
     sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cash_in = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
