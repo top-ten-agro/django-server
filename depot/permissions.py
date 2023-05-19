@@ -24,7 +24,7 @@ class HasOrderPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         depotRole = DepotRole.objects.filter(
-            user=request.user, depot=obj.depot).first()
+            user=request.user, depot=obj.balance.depot).first()
 
         if (depotRole == None):
             return False
@@ -35,7 +35,7 @@ class HasOrderPermission(permissions.BasePermission):
         if (depotRole.role == DepotRole.Role.MANAGER):
             return request.method in ['PUT', 'PATCH', 'DELETE']
 
-        return depotRole.role == DepotRole.Role.OFFICER and obj.created_by == request.user
+        return depotRole.role == DepotRole.Role.OFFICER and obj.balance.officer == depotRole
 
 
 class HasBalancePermission(permissions.BasePermission):

@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 from .models import Order, OrderItem, Transaction, Restock, RestockItem
 from customer.serializers import CustomerSerializer
+from depot.serializers import BalanceSerializer
 
 User = get_user_model()
 
@@ -29,7 +30,7 @@ class OrderSerializer(FlexFieldsModelSerializer):
         fields = '__all__'
         expandable_fields = {
             'created_by': (CreatedBySerializer),
-            'customer': (CustomerSerializer, {'fields': ['id', 'name']})
+            'balance': (BalanceSerializer, {'fields': ['id', 'customer.id', 'customer.name']})
         }
 
     def create(self, validated_data):
@@ -71,8 +72,8 @@ class TransactionSerializer(FlexFieldsModelSerializer):
         model = Transaction
         fields = '__all__'
         expandable_fields = {
-            'created_by': (CreatedBySerializer),
-            'customer': (CustomerSerializer, {'fields': ['id', 'name']})
+            'created_by': (CreatedBySerializer,),
+            'balance': (BalanceSerializer, {'fields': ['id', 'customer.id', 'customer.name']})
         }
 
 

@@ -23,11 +23,12 @@ class OrderViewset(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     pagination_class = Pagination
     permission_classes = (permissions.IsAuthenticated, HasOrderPermission,)
-    filterset_fields = ('depot', 'balance', 'created_by', 'approved')
+    filterset_fields = ('balance', 'balance__depot',
+                        'balance__officer',  'created_by', 'approved')
     ordering_fields = ('created_at', 'approved', 'total', 'created_by',)
 
     def get_queryset(self):
-        return self.queryset.filter(depot__employees=self.request.user)
+        return self.queryset.filter(balance__depot__employees=self.request.user)
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
@@ -95,7 +96,7 @@ class TransactionViewset(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    filterset_fields = ('depot', 'balance', 'created_by',
+    filterset_fields = ('depot', 'balance', 'balance__officer', 'created_by',
                         'id', 'approved', 'title', 'category',)
     ordering_fields = ('balance', 'category', 'created_by',
                        'id', 'approved', 'cash_in', 'cash_out')
