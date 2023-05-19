@@ -18,7 +18,7 @@ class CustomerViewset(FlexFieldsModelViewSet):
     serializer_class = CustomerSerializer
     pagination_class = CustomersPagination
     ordering_fields = ('created_at', )
-    filterset_fields = ('name', 'phone', 'stores',)
+    filterset_fields = ('name', 'phone', 'depots',)
 
     @action(detail=False, methods=['get'])
     def backup(self, request):

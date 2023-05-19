@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
-from store.models import Store
+from depot.models import Depot, Balance
 from product.models import Product
 from customer.models import Customer
 
@@ -11,8 +11,7 @@ User = get_user_model()
 
 
 class Order(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    balance = models.ForeignKey(Balance, on_delete=models.CASCADE)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     commission = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[
@@ -58,9 +57,9 @@ class Transaction(models.Model):
         BILL = "BILL"
 
     category = models.CharField(max_length=30, choices=CATEGORIES.choices)
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    customer = models.ForeignKey(
-        Customer, on_delete=models.DO_NOTHING, null=True, blank=True)
+    depot = models.ForeignKey(Depot, on_delete=models.CASCADE)
+    balance = models.ForeignKey(
+        Balance, on_delete=models.DO_NOTHING, null=True, blank=True)
     title = models.CharField(max_length=256)
     note = models.TextField(max_length=1026, null=True, blank=True)
     approved = models.BooleanField(default=False)
@@ -81,7 +80,7 @@ class Transaction(models.Model):
 
 
 class Restock(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    depot = models.ForeignKey(Depot, on_delete=models.CASCADE)
     approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name='restocks_created')

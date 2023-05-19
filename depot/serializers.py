@@ -1,27 +1,27 @@
 from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
-from .models import Store, StoreRole, Stock, Balance
+from .models import Depot, DepotRole, Stock, Balance
 from user.serializers import UserSerializer
 from product.serializers import ProductSerializer
 from customer.serializers import CustomerSerializer
 
 
-class StoreSerializer(serializers.ModelSerializer):
+class DepotSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Store
+        model = Depot
         fields = ("id", "name", "address", "created_at", "updated_at",)
 
 
-class StoreRoleSerializer(FlexFieldsModelSerializer):
+class DepotRoleSerializer(FlexFieldsModelSerializer):
     class Meta:
-        model = StoreRole
+        model = DepotRole
         fields = "__all__"
         expandable_fields = {
             'user': (UserSerializer, {'fields': ('id', 'first_name', 'last_name', 'email')})
         }
 
 
-class StoreProductSerializer(serializers.ModelSerializer):
+class DepotProductSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
 
     class Meta:
@@ -36,5 +36,5 @@ class BalanceSerializer(FlexFieldsModelSerializer):
         fields = '__all__'
         expandable_fields = {
             'customer': (CustomerSerializer,),
-            'officer': (StoreRoleSerializer, {'fields': ('id', 'user.email', 'user.id',)})
+            'officer': (DepotRoleSerializer, {'fields': ('id', 'user.email', 'user.id',)})
         }

@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     "api",
     "customer",
     "product",
-    "store",
+    "depot",
     "sales",
     "user"
 ]

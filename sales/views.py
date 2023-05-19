@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .serializers import OrderSerializer, TransactionSerializer, RestockSerializer
 from .models import Order, OrderItem, Transaction, Restock, RestockItem
-from store.permissions import HasRestockPermission, HasOrderPermission
-from store.models import Stock, Balance
+from depot.permissions import HasRestockPermission, HasOrderPermission
+from depot.models import Stock, Balance
 
 
 class Pagination(pagination.PageNumberPagination):
@@ -23,20 +23,21 @@ class OrderViewset(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     pagination_class = Pagination
     permission_classes = (permissions.IsAuthenticated, HasOrderPermission,)
-    filterset_fields = ('store', 'customer', 'created_by', 'approved')
+    filterset_fields = ('depot', 'balance', 'created_by', 'approved')
     ordering_fields = ('created_at', 'approved', 'total', 'created_by',)
 
     def get_queryset(self):
-        return self.queryset.filter(store__employees=self.request.user)
+        return self.queryset.filter(depot__employees=self.request.user)
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         email = self.request.query_params.get("created_by.email", None)
         if email is not None:
             queryset = queryset.filter(created_by__email__istartswith=email)
-        name = self.request.query_params.get("customer.name", None)
+        name = self.request.query_params.get("balance.customer.name", None)
         if name is not None:
-            queryset = queryset.filter(customer__name__istartswith=name)
+            queryset = queryset.filter(
+                balance__customer__name__istartswith=name)
         return queryset
 
     def perform_create(self, serializer):
@@ -61,10 +62,10 @@ class OrderViewset(viewsets.ModelViewSet):
 
         with transaction.atomic():
             order.save(update_fields=['approved'])
-            Balance.objects.filter(store=order.store, customer=order.customer).update(
-                sales=F('sales') + order.total)
+            order.balance.sales = F('sales') + order.total
+            order.balance.save()
             for item in items:
-                Stock.objects.filter(product=item.product, store=order.store).update(
+                Stock.objects.filter(product=item.product, depot=order.balance.depot).update(
                     quantity=F('quantity')-item.quantity)
 
         return Response({"success": True})
@@ -80,10 +81,10 @@ class OrderViewset(viewsets.ModelViewSet):
         items = OrderItem.objects.filter(order=order)
 
         with transaction.atomic():
-            Balance.objects.filter(store=order.store, customer=order.customer).update(
-                sales=F('sales') - order.total)
+            order.balance.sales = F('sales') - order.total
+            order.balance.save()
             for item in items:
-                Stock.objects.filter(product=item.product, store=order.store).update(
+                Stock.objects.filter(product=item.product, depot=order.balance.depot).update(
                     quantity=F('quantity')+item.quantity)
             order.delete()
 
@@ -94,22 +95,24 @@ class TransactionViewset(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    filterset_fields = ('store', 'customer', 'created_by',
+    filterset_fields = ('depot', 'balance', 'created_by',
                         'id', 'approved', 'title', 'category',)
-    ordering_fields = ('customer', 'category', 'created_by',
+    ordering_fields = ('balance', 'category', 'created_by',
                        'id', 'approved', 'cash_in', 'cash_out')
 
     def get_queryset(self):
-        return self.queryset.filter(store__employees=self.request.user)
+        return self.queryset.filter(depot__employees=self.request.user)
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         email = self.request.query_params.get("created_by.email", None)
         if email is not None:
-            queryset = queryset.filter(created_by__email__istartswith=email)
-        name = self.request.query_params.get("customer.name", None)
+            queryset = queryset.filter(
+                created_by__email__istartswith=email)
+        name = self.request.query_params.get("balance.customer.name", None)
         if name is not None:
-            queryset = queryset.filter(customer__name__istartswith=name)
+            queryset = queryset.filter(
+                balance__customer__name__istartswith=name)
         return queryset
 
     def perform_create(self, serializer):
@@ -131,28 +134,27 @@ class TransactionViewset(viewsets.ModelViewSet):
         txn.approved_by = request.user
         txn.approved_at = timezone.now()
 
-        if txn.customer is None:
+        if txn.balance is None:
             txn.save(update_fields=['approved'])
             return Response({"success": True})
 
         with transaction.atomic():
             txn.save(update_fields=['approved'])
-            Balance.objects.filter(store=txn.store, customer=txn.customer).update(
-                cash_in=F('cash_in') + txn.cash_in - txn.cash_out)
-
+            txn.balance.cash_in = F('cash_in') + txn.cash_in - txn.cash_out
+            txn.balance.save()
         return Response({"success": True})
 
     @action(detail=True, methods=['delete'])
     def remove(self, request, pk=None):
         txn = self.get_object()
 
-        if txn.approved == False or txn.customer is None:
+        if txn.approved == False or txn.balance is None:
             txn.delete()
             return Response({"success": True})
 
         with transaction.atomic():
-            Balance.objects.filter(store=txn.store, customer=txn.customer).update(
-                cash_in=F('cash_in') - txn.cash_in + txn.cash_out)
+            txn.balance.cash_in = F('cash_in') - txn.cash_in + txn.cash_out
+            txn.balance.save()
             txn.delete()
 
         return Response({"success": True})
@@ -162,11 +164,11 @@ class RestockViewset(viewsets.ModelViewSet):
     serializer_class = RestockSerializer
     pagination_class = Pagination
     permission_classes = (permissions.IsAuthenticated, HasRestockPermission,)
-    filterset_fields = ['created_by', 'store', 'approved', 'id']
+    filterset_fields = ['created_by', 'depot', 'approved', 'id']
     ordering_fields = ('created_at', 'approved', 'created_by',)
 
     def get_queryset(self):
-        return Restock.objects.filter(store__employees=self.request.user)
+        return Restock.objects.filter(depot__employees=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -199,7 +201,7 @@ class RestockViewset(viewsets.ModelViewSet):
             restock.save(update_fields=['approved'])
             for item in restock_items:
                 stock, created = Stock.objects.get_or_create(
-                    store=restock.store, product=item.product, defaults={
+                    depot=restock.depot, product=item.product, defaults={
                         "quantity": item.quantity
                     })
                 if not created and item.quantity > 0:
@@ -222,7 +224,7 @@ class RestockViewset(viewsets.ModelViewSet):
 
         with transaction.atomic():
             for item in restock_items:
-                Stock.objects.filter(store=restock.store, product=item.product).update(
+                Stock.objects.filter(depot=restock.depot, product=item.product).update(
                     quantity=F('quantity')-item.quantity)
             restock.delete()
         return Response({"success": True})
