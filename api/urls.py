@@ -4,7 +4,7 @@ from product.views import ProductViewset
 from sales.views import OrderViewset, TransactionViewset, RestockViewset
 from depot.views import DepotViewset, DepotRoleViewset, BalanceViewset, StockViewset
 from customer.views import CustomerViewset
-from .views import BackupRestoreViewset
+from .views import BackupRestoreViewset, HomepageView
 
 router = DefaultRouter()
 router.register(r"products", ProductViewset, basename='products')
@@ -20,4 +20,5 @@ router.register(r'backup',  BackupRestoreViewset, basename="backup")
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('homepage', HomepageView.as_view()),
 ]

@@ -1,5 +1,6 @@
-from decimal import Decimal
-from django.db.models import F
+from datetime import timedelta, datetime
+from django.utils import timezone
+from django.db.models import F, Sum
 from django.utils import timezone
 from django.db import transaction
 from rest_framework import viewsets, permissions, pagination, status
@@ -10,7 +11,7 @@ from rest_framework.decorators import action
 from .serializers import OrderSerializer, TransactionSerializer, RestockSerializer
 from .models import Order, OrderItem, Transaction, Restock, RestockItem
 from depot.permissions import HasRestockPermission, HasOrderPermission
-from depot.models import Stock, Balance
+from depot.models import Stock, DepotRole
 
 
 class Pagination(pagination.PageNumberPagination):
@@ -62,7 +63,8 @@ class OrderViewset(viewsets.ModelViewSet):
         items = OrderItem.objects.filter(order=order)
 
         with transaction.atomic():
-            order.save(update_fields=['approved'])
+            order.save(update_fields=['approved',
+                       'approved_at', 'approved_by'])
             order.balance.sales = F('sales') + order.total
             order.balance.save()
             for item in items:
@@ -90,6 +92,28 @@ class OrderViewset(viewsets.ModelViewSet):
             order.delete()
 
         return Response({"success": True})
+
+    @action(detail=False, methods=['get'])
+    def statement(self, request):
+        to_date = request.query_params.get(
+            'to', timezone.now().strftime('%Y-%m-%d'))
+        from_date = request.query_params.get(
+            'from', (timezone.now() - timedelta(days=30)).strftime('%Y-%m-%d'))
+        my_roles = DepotRole.objects.filter(user=self.request.user)
+
+        officers = [
+            role.user for role in my_roles if role.role == DepotRole.Role.OFFICER]
+        other_roles = [
+            role.depot for role in my_roles if role.role != DepotRole.Role.OFFICER]
+
+        orders = Order.objects.filter(approved=True).filter(
+            created_at__date__gte=from_date, created_at__date__lte=to_date)
+        orders = orders.filter(
+            created_by__in=officers) | orders.filter(balance__depot__in=other_roles)
+
+        serializer = OrderSerializer(
+            orders, many=True, context={"request": request})
+        return Response(serializer.data)
 
 
 class TransactionViewset(viewsets.ModelViewSet):
@@ -136,11 +160,11 @@ class TransactionViewset(viewsets.ModelViewSet):
         txn.approved_at = timezone.now()
 
         if txn.balance is None:
-            txn.save(update_fields=['approved'])
+            txn.save(update_fields=['approved', 'approved_at', 'approved_by'])
             return Response({"success": True})
 
         with transaction.atomic():
-            txn.save(update_fields=['approved'])
+            txn.save(update_fields=['approved', 'approved_at', 'approved_by'])
             txn.balance.cash_in = F('cash_in') + txn.cash_in - txn.cash_out
             txn.balance.save()
         return Response({"success": True})
@@ -160,6 +184,28 @@ class TransactionViewset(viewsets.ModelViewSet):
 
         return Response({"success": True})
 
+    @action(detail=False, methods=['get'])
+    def statement(self, request):
+        to_date = request.query_params.get(
+            'to', timezone.now().strftime('%Y-%m-%d'))
+        from_date = request.query_params.get(
+            'from', (timezone.now() - timedelta(days=30)).strftime('%Y-%m-%d'))
+        my_roles = DepotRole.objects.filter(user=self.request.user)
+
+        officers = [
+            role.user for role in my_roles if role.role == DepotRole.Role.OFFICER]
+        other_roles = [
+            role.depot for role in my_roles if role.role != DepotRole.Role.OFFICER]
+
+        trxs = Transaction.objects.filter(approved=True).filter(
+            created_at__date__gte=from_date, created_at__date__lte=to_date)
+        trxs = trxs.filter(
+            created_by__in=officers) | trxs.filter(depot__in=other_roles)
+
+        serializer = TransactionSerializer(
+            trxs, many=True, context={"request": request})
+        return Response(serializer.data)
+
 
 class RestockViewset(viewsets.ModelViewSet):
     serializer_class = RestockSerializer
@@ -171,6 +217,13 @@ class RestockViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         return Restock.objects.filter(depot__employees=self.request.user)
 
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        email = self.request.query_params.get("created_by.email", None)
+        if email is not None:
+            queryset = queryset.filter(created_by__email__istartswith=email)
+        return queryset
+
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
@@ -180,13 +233,6 @@ class RestockViewset(viewsets.ModelViewSet):
             raise ValidationError(
                 'This row is immutable and cannot be updated.')
         serializer.save()
-
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-        email = self.request.query_params.get("created_by.email", None)
-        if email is not None:
-            queryset = queryset.filter(created_by__email__istartswith=email)
-        return queryset
 
     @action(detail=True, methods=['put'])
     def approve(self, request, pk=None):
@@ -199,7 +245,8 @@ class RestockViewset(viewsets.ModelViewSet):
         restock_items = RestockItem.objects.filter(restock=restock)
 
         with transaction.atomic():
-            restock.save(update_fields=['approved'])
+            restock.save(update_fields=['approved',
+                         'approved_at', 'approved_by'])
             for item in restock_items:
                 stock, created = Stock.objects.get_or_create(
                     depot=restock.depot, product=item.product, defaults={

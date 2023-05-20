@@ -6,7 +6,7 @@ from product.serializers import ProductSerializer
 from customer.serializers import CustomerSerializer
 
 
-class DepotSerializer(serializers.ModelSerializer):
+class DepotSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Depot
         fields = ("id", "name", "address", "created_at", "updated_at",)
@@ -36,5 +36,6 @@ class BalanceSerializer(FlexFieldsModelSerializer):
         fields = '__all__'
         expandable_fields = {
             'customer': (CustomerSerializer,),
-            'officer': (DepotRoleSerializer, {'fields': ('id', 'user.email', 'user.id',)})
+            'officer': (DepotRoleSerializer, {'fields': ('id', 'user.email', 'user.id',)}),
+            'depot': (DepotSerializer, {'fields': ('id', 'name',)})
         }

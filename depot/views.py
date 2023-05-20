@@ -59,8 +59,7 @@ class BalanceViewset(viewsets.ModelViewSet):
     ordering_fields = ('customer', 'cash_in', 'sales', 'created_at')
 
     def get_queryset(self):
-        employee = Balance.objects.filter(depot__employees=self.request.user)
-        return employee
+        return Balance.objects.filter(depot__employees=self.request.user)
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
