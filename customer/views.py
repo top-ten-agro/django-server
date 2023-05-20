@@ -60,7 +60,7 @@ class CustomerViewset(FlexFieldsModelViewSet):
             created_by__in=officers) | trx_query.filter(depot__in=other_roles)
         orders = order_query.filter(
             created_by__in=officers) | order_query.filter(balance__depot__in=other_roles)
-        print(orders, transactions)
+
         transactions = transactions.values("balance").annotate(
             total_cash_in=Sum('cash_in'), total_cash_out=Sum('cash_out'))
         orders = orders.values("balance").annotate(sales=Sum('total'))

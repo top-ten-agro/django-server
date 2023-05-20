@@ -29,6 +29,6 @@ class BalanceAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('customer',  'depot', 'sales', 'cash_in'),
+            'fields': ('customer',  'depot', 'officer', 'sales', 'cash_in'),
         }),
     )
