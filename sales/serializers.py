@@ -18,7 +18,8 @@ class OrderItemSerializer(FlexFieldsModelSerializer):
 class CreatedBySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'id',)
+        fields = ('email', 'id', 'get_full_name', )
+        
 
 
 class OrderSerializer(FlexFieldsModelSerializer):
