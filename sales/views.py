@@ -33,9 +33,11 @@ class OrderViewset(viewsets.ModelViewSet):
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
-        email = self.request.query_params.get("created_by.email", None)
-        if email is not None:
-            queryset = queryset.filter(created_by__email__istartswith=email)
+        createdby_name = self.request.query_params.get("created_by.name", None)
+        if createdby_name is not None:
+            queryset = queryset.filter(
+                created_by__name__istartswith=createdby_name)
+
         name = self.request.query_params.get("balance.customer.name", None)
         if name is not None:
             queryset = queryset.filter(

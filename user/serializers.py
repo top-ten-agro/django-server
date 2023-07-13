@@ -8,7 +8,7 @@ class UserSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'password', 'email',
-                  'first_name', 'last_name', 'phone')
+                  'name',   'phone')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -17,12 +17,8 @@ class UserSerializer(FlexFieldsModelSerializer):
 
     def update(self, instance, validated_data):
         instance.email = validated_data.get('email', instance.email)
-        instance.first_name = validated_data.get(
-            'first_name', instance.first_name)
-        instance.last_name = validated_data.get(
-            'last_name', instance.last_name)
-        instance.phone = validated_data.get(
-            'phone', instance.phone)
+        instance.name = validated_data.get('name', instance.name)
+        instance.phone = validated_data.get('phone', instance.phone)
         password = validated_data.get('password', None)
         if password is not None:
             instance.set_password(password)
@@ -35,6 +31,5 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token['email'] = user.email
-        token['first_name'] = user.first_name
-        token['last_name'] = user.last_name
+        token['name'] = user.name
         return token

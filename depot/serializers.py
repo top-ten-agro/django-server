@@ -17,7 +17,7 @@ class DepotRoleSerializer(FlexFieldsModelSerializer):
         model = DepotRole
         fields = "__all__"
         expandable_fields = {
-            'user': (UserSerializer, {'fields': ('id', 'first_name', 'last_name', 'email')})
+            'user': (UserSerializer, {'fields': ('id', 'name', 'email')})
         }
 
 
