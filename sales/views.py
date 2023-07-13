@@ -122,6 +122,7 @@ class TransactionViewset(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = Pagination
     filterset_fields = ('depot', 'balance', 'balance__officer', 'created_by',
                         'id', 'approved', 'title', 'category',)
     ordering_fields = ('balance', 'category', 'created_by',
