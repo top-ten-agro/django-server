@@ -8,7 +8,7 @@ class UserSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'password', 'email',
-                  'name',   'phone')
+                  'name', 'phone')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
