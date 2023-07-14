@@ -3,7 +3,6 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 from .models import Order, OrderItem, Transaction, Restock, RestockItem
-from customer.serializers import CustomerSerializer
 from depot.serializers import BalanceSerializer, DepotSerializer
 
 User = get_user_model()
@@ -13,6 +12,11 @@ class OrderItemSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = OrderItem
         fields = ('product', 'quantity', 'rate',)
+        expandable_fields = {
+            'product': ('product.serializers.ProductSerializer', {
+                'fields': ('id', 'name', 'unit', 'price', 'pack_size',
+                           )})
+        }
 
 
 class CreatedBySerializer(serializers.ModelSerializer):
@@ -22,15 +26,18 @@ class CreatedBySerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(FlexFieldsModelSerializer):
-    items = OrderItemSerializer(many=True)
     total = serializers.ReadOnlyField()
+    items = OrderItemSerializer(many=True)
 
     class Meta:
         model = Order
         fields = '__all__'
         expandable_fields = {
             'created_by': (CreatedBySerializer),
-            'balance': (BalanceSerializer, {'fields': ['id', 'depot', 'customer.id', 'customer.name']})
+            'balance': (BalanceSerializer, {
+                'fields': ['id', 'depot', 'customer.id', 'customer.name', 'customer.address', 'cash_in', 'sales']
+            }),
+            'items': (OrderItemSerializer, {'many': True}),
         }
 
     def create(self, validated_data):
