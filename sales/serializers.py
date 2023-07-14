@@ -80,7 +80,9 @@ class TransactionSerializer(FlexFieldsModelSerializer):
         fields = '__all__'
         expandable_fields = {
             'created_by': (CreatedBySerializer,),
-            'balance': (BalanceSerializer, {'fields': ['id', 'customer.id', 'customer.name']}),
+            'balance': (BalanceSerializer, {
+                'fields': ['id', 'depot', 'customer.id', 'customer.name', 'customer.address']
+            }),
             'depot': (DepotSerializer, {'fields': ['id', 'name']})
         }
 
