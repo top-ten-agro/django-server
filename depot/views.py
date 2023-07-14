@@ -15,6 +15,13 @@ class DepotViewset(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Depot.objects.filter(employees=self.request.user)
 
+    @action(methods=["GET"], detail=False)
+    def is_employee(self, request, *args, **kwargs):
+        depot_role = DepotRole.objects.filter(user=self.request.user).first()
+        if depot_role is None:
+            return Response({"is_employee": False})
+        return Response({"is_employee": True})
+
     @action(detail=True)
     def roles(self, request, *args, **kwargs):
         roles = DepotRole.objects.filter(depot=self.kwargs.get("pk"))
