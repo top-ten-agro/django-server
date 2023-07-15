@@ -36,6 +36,6 @@ class BalanceSerializer(FlexFieldsModelSerializer):
         fields = '__all__'
         expandable_fields = {
             'customer': (CustomerSerializer,),
-            'officer': (DepotRoleSerializer, {'fields': ('id', 'user.email', 'user.id',)}),
+            'officer': (DepotRoleSerializer, {'fields': ('id', 'user.email', 'user.id', 'user.name',)}),
             'depot': (DepotSerializer, {'fields': ('id', 'name',)})
         }
